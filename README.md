@@ -25,11 +25,14 @@ python -m sa_gbv_data.ingest.saps_precincts https://example.org/precincts.zip da
 python -m sa_gbv_data.ingest.municipal_wards data/raw/wards.geojson data/processed/wards.parquet
 python -m sa_gbv_data.ingest.census_sal data/raw/sal.shp data/processed/sal.parquet
 python -m sa_gbv_data.ingest.osm_risk -35.0 18.0 -33.5 19.0 data/processed/osm_risk.parquet
+python -m sa_gbv_data.enrich data/processed/saps_crime.parquet data/processed/precincts.parquet data/processed/saps_crime_enriched.parquet
 ```
 
 The commands validate the required source fields, run `geoengine-utils` spatial readiness checks, and write columnar Parquet outputs. Spatial commands also write a PMTiles archive beside the Parquet file by default; use `--pmtiles-output` to choose another path. SAPS crime is tabular and remains GeoParquet-only until it is joined to a spatial dataset. Replace the example SAPS and MDB URLs/paths with the current official downloads when running them.
 
 Outputs are kept under `data/` while they are small enough for GitHub. A repository-size guard stops artifacts at 90 MB, leaving room below GitHub's hard per-file limit; move larger outputs to R2 when that happens.
+
+The enrichment command joins normalized station names from SAPS crime to precinct `STATION` values, keeps unmatched stations in a `.unmatched.csv` report, and produces a map-ready crime GeoParquet plus PMTiles layer.
 
 ## Data contracts and tests
 
