@@ -1,6 +1,7 @@
 """Shared download and output helpers for ingestion commands."""
 
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from zipfile import ZipFile
 
 import geopandas as gpd
@@ -74,13 +75,19 @@ def write_pmtiles(
         ) from error
 
     destination.parent.mkdir(parents=True, exist_ok=True)
-    convert_vector_to_pmtiles(
-        parquet,
-        destination,
-        layer_name=layer_name,
-        min_zoom=min_zoom,
-        max_zoom=max_zoom,
-    )
+    # GeoParquet is authoritative in EPSG:9221, while geoengine-utils expects
+    # geographic coordinates when constructing the PMTiles bounds header.
+    with TemporaryDirectory() as temporary_directory:
+        geographic_source = Path(temporary_directory) / parquet.name
+        frame = gpd.read_parquet(parquet).to_crs("EPSG:4326")
+        frame.to_parquet(geographic_source, index=False)
+        convert_vector_to_pmtiles(
+            geographic_source,
+            destination,
+            layer_name=layer_name,
+            min_zoom=min_zoom,
+            max_zoom=max_zoom,
+        )
     enforce_repository_size(destination)
 
 

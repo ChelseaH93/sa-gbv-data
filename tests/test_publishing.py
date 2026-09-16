@@ -29,7 +29,12 @@ def test_write_pmtiles_delegates_with_expected_options(monkeypatch, tmp_path):
     calls = {}
 
     def fake_convert(source, output, **options):
-        calls.update(source=source, output=output, options=options)
+        calls.update(
+            source=source,
+            output=output,
+            options=options,
+            source_crs=gpd.read_parquet(source).crs.to_epsg(),
+        )
         Path(output).write_bytes(b"pmtiles")
 
     fake_cloud = types.ModuleType("geoengine_utils.cloud")
@@ -40,10 +45,15 @@ def test_write_pmtiles_delegates_with_expected_options(monkeypatch, tmp_path):
 
     source = tmp_path / "sample.parquet"
     output = tmp_path / "sample.pmtiles"
-    source.write_bytes(b"parquet")
+    gpd.GeoDataFrame(
+        {"name": ["sample"], "geometry": [Point(18.4, -33.9)]},
+        geometry="geometry",
+        crs="EPSG:9221",
+    ).to_parquet(source, index=False)
     common.write_pmtiles(source, output, layer_name="sample", min_zoom=2, max_zoom=6)
 
-    assert calls["source"] == source
+    assert calls["source"] != source
+    assert calls["source_crs"] == 4326
     assert calls["output"] == output
     assert calls["options"] == {"layer_name": "sample", "min_zoom": 2, "max_zoom": 6}
 
