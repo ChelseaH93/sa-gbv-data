@@ -61,7 +61,7 @@ The Census 2022 sample bundle is a separate, infrequent microdata product. Uploa
 
 ## Free web map
 
-The static map is deployed as a Cloudflare Worker using `wrangler.toml`. The Worker serves `web/`, generates `config.js` at runtime, and proxies PMTiles through `/data/latest/processed` so range requests work without public R2 CORS configuration. Set the Worker environment variable `R2_BASE_URL` to the public R2/custom-domain URL containing the `latest/processed` directory. Do not use the private S3 endpoint in browser configuration; no R2 credentials are exposed to the browser.
+The static map is deployed as a Cloudflare Worker using `wrangler.toml`. The Worker serves `web/`, generates `config.js` at runtime, and proxies PMTiles through `/data/latest/processed` so range requests work without public R2 CORS configuration. `R2_BASE_URL` is a public, read-only URL and is defined in `wrangler.toml`; override it with a Worker variable if the R2 public domain changes. Do not use the private S3 endpoint in browser configuration; no R2 credentials are exposed to the browser.
 
 For direct browser access to the public R2 PMTiles URLs, apply [`r2-cors.json`](r2-cors.json) to the bucket. With the Cloudflare CLI, run `npx wrangler r2 bucket cors set <bucket-name> --file r2-cors.json`. The policy allows the Worker origin to make ranged `GET`/`HEAD` requests and exposes the headers required by PMTiles. The Worker proxy remains available when direct R2 CORS is not desired.
 

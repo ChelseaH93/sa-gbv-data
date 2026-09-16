@@ -2,6 +2,9 @@ name = "sa-gbv-data"
 main = "worker.js"
 compatibility_date = "2026-09-16"
 
+[vars]
+R2_BASE_URL = "https://pub-fad3af29894f4dc3a44e4f9418cac9bd.r2.dev/latest/processed"
+
 [assets]
 directory = "./web"
 binding = "ASSETS"
