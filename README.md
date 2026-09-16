@@ -45,6 +45,7 @@ Configure these GitHub repository variables and secrets:
 - Repository variable `MDB_BOUNDARIES_URL`: optional MDB GeoJSON/Shapefile/ZIP URL
 - Repository variable `CENSUS_SAL_URL`: optional Census SAL Parquet/Shapefile/ZIP URL
 - Repository variable `CENSUS_SAMPLE_URL`: optional R2/public URL for the manually uploaded Census 2022 sample ZIP
+- Repository variable `TCC_KML_URL`: optional Thuthuzela Care Centre KML URL; defaults to the official gov.za-linked map export when configured
 - Repository variables `OSM_SOUTH`, `OSM_WEST`, `OSM_NORTH`, `OSM_EAST`: optional Overpass bounding box
 - Secret `R2_ACCOUNT_ID`: Cloudflare account ID
 - Secret `R2_BUCKET`: R2 bucket name
@@ -64,6 +65,8 @@ The static map in `web/` is ready to deploy with the free Cloudflare Pages plan.
 GeoParquet outputs are written in `EPSG:9221` (Hartebeesthoek94 / ZAF BSU Albers 25E). PMTiles use the Web Mercator tiling convention required by browser vector-tile clients such as MapLibre; the authoritative GeoParquet remains in EPSG:9221.
 
 The current official SAPS first-quarter workbook is `https://www.saps.gov.za/services/downloads/2026/2026-2027_-_1st_Quarter_WEB.xlsm`.
+
+The official Thuthuzela Care Centre source is the [gov.za TCC map](https://www.gov.za/TCC), whose public KML export is parsed into `tcc_centres.parquet` and `tcc_centres.pmtiles`.
 
 The manually downloaded SAPS boundary archive is stored at `data/raw/saps_station_boundaries_points.zip`. It contains both station points and polygon boundaries; the workflow uses the polygon boundaries for crime enrichment when `SAPS_PRECINCT_URL` is not configured.
 

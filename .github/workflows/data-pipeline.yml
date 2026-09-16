@@ -58,6 +58,7 @@ jobs:
       MDB_BOUNDARIES_URL: ${{ vars.MDB_BOUNDARIES_URL || secrets.MDB_BOUNDARIES_URL }}
       CENSUS_SAL_URL: ${{ vars.CENSUS_SAL_URL || secrets.CENSUS_SAL_URL }}
       CENSUS_SAMPLE_URL: ${{ inputs.census_sample_url || vars.CENSUS_SAMPLE_URL || secrets.CENSUS_SAMPLE_URL }}
+      TCC_KML_URL: ${{ vars.TCC_KML_URL || secrets.TCC_KML_URL || 'https://www.google.com/maps/d/u/0/kml?mid=1J5vQRQD2NXR36hwuig8OhV8uO2B5JX0i&forcekml=1' }}
       OSM_SOUTH: ${{ vars.OSM_SOUTH || secrets.OSM_SOUTH }}
       OSM_WEST: ${{ vars.OSM_WEST || secrets.OSM_WEST }}
       OSM_NORTH: ${{ vars.OSM_NORTH || secrets.OSM_NORTH }}
@@ -112,7 +113,8 @@ jobs:
             *.zip|*.ZIP)
               mkdir -p data/raw/municipal_wards
               unzip -o data/raw/municipal_wards.download -d data/raw/municipal_wards
-              source_path=$(find data/raw/municipal_wards -type f \( -name '*.shp' -o -name '*.geojson' -o -name '*.json' \) | head -n 1)
+              source_path=$(find data/raw/municipal_wards -type f -name 'zaf_admin4.shp' | head -n 1)
+              if test -z "$source_path"; then source_path=$(find data/raw/municipal_wards -type f \( -name '*.shp' -o -name '*.geojson' -o -name '*.json' \) | head -n 1); fi
               ;;
             *) source_path=data/raw/municipal_wards.download ;;
           esac
@@ -143,6 +145,9 @@ jobs:
           python -m sa_gbv_data.ingest.osm_risk \
             "$OSM_SOUTH" "$OSM_WEST" "$OSM_NORTH" "$OSM_EAST" \
             data/processed/osm_risk.parquet
+      - name: Ingest Thuthuzela Care Centres
+        if: env.TCC_KML_URL != ''
+        run: python -m sa_gbv_data.ingest.tcc_centres data/processed/tcc_centres.parquet --url "$TCC_KML_URL"
       - name: Run geoengine-utils checks
         run: |
           shopt -s nullglob

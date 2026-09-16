@@ -27,6 +27,11 @@ const layers = {
     file: "osm_risk.pmtiles",
     sourceLayer: "osm_risk",
     paint: { "circle-color": "#e11d48", "circle-radius": 4, "circle-opacity": 0.8 }
+  },
+  tcc: {
+    file: "tcc_centres.pmtiles",
+    sourceLayer: "tcc_centres",
+    paint: { "circle-color": "#0891b2", "circle-radius": 6, "circle-stroke-color": "#ecfeff", "circle-stroke-width": 1.5 }
   }
 };
 
