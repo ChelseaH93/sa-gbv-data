@@ -6,7 +6,12 @@ from pathlib import Path
 import geopandas as gpd
 
 from ..contracts import MUNICIPAL_WARD_CONTRACT
-from .common import validate_with_geoengine, write_geodataframe, write_pmtiles
+from .common import (
+    normalize_polygon_geometry,
+    validate_with_geoengine,
+    write_geodataframe,
+    write_pmtiles,
+)
 
 
 def normalize_source(frame: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
@@ -30,7 +35,7 @@ def normalize_source(frame: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
 def ingest(source: Path, output: Path, pmtiles_output: Path | None = None) -> gpd.GeoDataFrame:
     frame = gpd.read_file(source)
-    selected = normalize_source(frame)
+    selected = normalize_polygon_geometry(normalize_source(frame))
     MUNICIPAL_WARD_CONTRACT.validate(selected)
     validate_with_geoengine(selected, "municipal_wards")
     write_geodataframe(selected, output)

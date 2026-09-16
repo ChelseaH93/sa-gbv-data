@@ -63,7 +63,7 @@ The Census 2022 sample bundle is a separate, infrequent microdata product. Uploa
 
 The static map in `web/` is ready to deploy with the free Cloudflare Pages plan. Connect the repository in Cloudflare Pages, set the build output directory to `web`, and use no build command. Before deployment, edit `web/config.js` and set `R2_BASE_URL` to the public R2/custom-domain URL containing the `latest/processed` directory.
 
-GeoParquet outputs are written in `EPSG:9221` (Hartebeesthoek94 / ZAF BSU Albers 25E). PMTiles use the Web Mercator tiling convention required by browser vector-tile clients such as MapLibre; the authoritative GeoParquet remains in EPSG:9221.
+GeoParquet outputs are written in `EPSG:9221` (Hartebeesthoek94 / ZAF BSU Albers 25E). Polygon layers are normalized to `MultiPolygon` before validation. PMTiles are generated in Web Mercator (`EPSG:3857`) through `geoengine-utils`, as required by the PMTiles/MapLibre vector-tile convention; the authoritative GeoParquet remains in EPSG:9221.
 
 The current official SAPS first-quarter workbook is `https://www.saps.gov.za/services/downloads/2026/2026-2027_-_1st_Quarter_WEB.xlsm`.
 

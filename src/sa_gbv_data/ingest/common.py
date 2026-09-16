@@ -7,6 +7,7 @@ from zipfile import ZipFile
 
 import geopandas as gpd
 import requests
+from shapely.geometry import MultiPolygon, Polygon
 
 MAX_GITHUB_FILE_BYTES = 90_000_000
 TARGET_CRS = "EPSG:9221"
@@ -42,6 +43,17 @@ def write_geodataframe(frame: gpd.GeoDataFrame, destination: Path) -> None:
     frame = frame.to_crs(TARGET_CRS)
     frame.to_parquet(destination, index=False)
     enforce_repository_size(destination)
+
+
+def normalize_polygon_geometry(frame: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """Normalize Polygon/MultiPolygon layers to one geometry type."""
+    frame = frame.copy()
+    frame["geometry"] = frame.geometry.map(
+        lambda geometry: MultiPolygon([geometry])
+        if isinstance(geometry, Polygon)
+        else geometry
+    )
+    return frame
 
 
 def validate_with_geoengine(frame: gpd.GeoDataFrame, dataset_name: str) -> None:
