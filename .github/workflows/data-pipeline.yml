@@ -82,9 +82,11 @@ jobs:
       - name: Ingest SAPS crime
         run: python -m sa_gbv_data.ingest.saps_crime data/raw/saps_crime.xlsx data/processed/saps_crime.parquet
       - name: Refresh precincts when configured
-        if: env.SAPS_PRECINCT_URL != ''
+        if: env.SAPS_PRECINCT_URL != '' || hashFiles('data/raw/saps_station_boundaries_points.zip') != ''
         run: |
-          python -m sa_gbv_data.ingest.saps_precincts "$SAPS_PRECINCT_URL" data/processed/precincts.parquet
+          precinct_source="$SAPS_PRECINCT_URL"
+          if test -z "$precinct_source"; then precinct_source=data/raw/saps_station_boundaries_points.zip; fi
+          python -m sa_gbv_data.ingest.saps_precincts "$precinct_source" data/processed/precincts.parquet
       - name: Enrich crime with precinct geometry
         if: hashFiles('data/processed/precincts.parquet') != ''
         run: |

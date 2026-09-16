@@ -2,6 +2,7 @@
 
 import argparse
 from pathlib import Path
+from zipfile import ZipFile
 
 import geopandas as gpd
 
@@ -15,14 +16,29 @@ from .common import (
 )
 
 
-def ingest(source: str, output: Path, workdir: Path, pmtiles_output: Path | None = None) -> gpd.GeoDataFrame:
-    archive = workdir / "saps_precincts.zip"
-    extract_dir = extract_zip(download(source, archive), workdir / "saps_precincts")
-    shapefile = next(extract_dir.rglob("*.shp"), None)
+def _prepare_archive(source: str | Path, workdir: Path) -> Path:
+    source_path = Path(source)
+    archive = source_path if source_path.exists() else download(str(source), workdir / "saps_precincts.zip")
+    extract_dir = extract_zip(archive, workdir / "saps_precincts")
+    nested_archive = next(extract_dir.rglob("station_boundaries.zip"), None)
+    if nested_archive:
+        extract_dir = extract_zip(nested_archive, workdir / "saps_boundaries")
+    return extract_dir
+
+
+def ingest(source: str | Path, output: Path, workdir: Path, pmtiles_output: Path | None = None) -> gpd.GeoDataFrame:
+    extract_dir = _prepare_archive(source, workdir)
+    shapefile = next(extract_dir.rglob("Police_bounds.shp"), None)
+    shapefile = shapefile or next(extract_dir.rglob("*.shp"), None)
     if shapefile is None:
         raise FileNotFoundError("The SAPS precinct archive contains no .shp file")
     frame = gpd.read_file(shapefile)
-    selected = frame[["COMPONENT", "STATION", "geometry"]]
+    if "COMPNT_NM" in frame.columns:
+        selected = frame.rename(columns={"COMPNT_NM": "STATION"})
+        selected["COMPONENT"] = selected["STATION"]
+        selected = selected[["COMPONENT", "STATION", "geometry"]]
+    else:
+        selected = frame[["COMPONENT", "STATION", "geometry"]]
     SAPS_PRECINCT_CONTRACT.validate(selected)
     validate_with_geoengine(selected, "saps_precincts")
     write_geodataframe(selected, output)

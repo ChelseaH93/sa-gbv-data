@@ -62,6 +62,8 @@ GeoParquet outputs are written in `EPSG:9221` (Hartebeesthoek94 / ZAF BSU Albers
 
 The current official SAPS first-quarter workbook is `https://www.saps.gov.za/services/downloads/2026/2026-2027_-_1st_Quarter_WEB.xlsm`.
 
+The manually downloaded SAPS boundary archive is stored at `data/raw/saps_station_boundaries_points.zip`. It contains both station points and polygon boundaries; the workflow uses the polygon boundaries for crime enrichment when `SAPS_PRECINCT_URL` is not configured.
+
 ## Data contracts and tests
 
 Normalized schemas are defined in `src/sa_gbv_data/contracts.py`. Each contract checks required fields, nullability, scalar types, geometry validity, and SAL code uniqueness before an output is written. Run the regression suite with:
