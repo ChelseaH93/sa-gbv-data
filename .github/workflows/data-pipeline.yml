@@ -1,0 +1,119 @@
+name: Data pipeline
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+    inputs:
+      crime_url:
+        description: "SAPS quarterly crime export URL; defaults to the SAPS_CRIME_URL repository variable"
+        required: false
+        type: string
+      precinct_url:
+        description: "SAPS precinct ZIP URL; defaults to the SAPS_PRECINCT_URL repository variable"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: data-pipeline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Unit tests and source checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project
+        run: python -m pip install -e ".[dev]"
+      - name: Run unit tests
+        run: python -m pytest -q
+      - name: Compile source
+        run: python -m compileall -q src tests
+
+  update-and-publish:
+    name: Refresh datasets and publish to R2
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: tests
+    runs-on: ubuntu-latest
+    env:
+      SAPS_CRIME_URL: ${{ inputs.crime_url || vars.SAPS_CRIME_URL }}
+      SAPS_PRECINCT_URL: ${{ inputs.precinct_url || vars.SAPS_PRECINCT_URL }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ENDPOINT_URL: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project
+        run: python -m pip install -e ".[dev]"
+      - name: Download SAPS crime export
+        run: |
+          test -n "$SAPS_CRIME_URL" || (echo "Set the SAPS_CRIME_URL repository variable" && exit 1)
+          mkdir -p data/raw data/processed data/pmtiles
+          curl --fail --location --retry 3 "$SAPS_CRIME_URL" --output data/raw/saps_crime.xlsx
+      - name: Ingest SAPS crime
+        run: python -m sa_gbv_data.ingest.saps_crime data/raw/saps_crime.xlsx data/processed/saps_crime.parquet
+      - name: Refresh precincts when configured
+        if: env.SAPS_PRECINCT_URL != ''
+        run: |
+          python -m sa_gbv_data.ingest.saps_precincts "$SAPS_PRECINCT_URL" data/processed/precincts.parquet
+      - name: Enrich crime with precinct geometry
+        if: hashFiles('data/processed/precincts.parquet') != ''
+        run: |
+          python -m sa_gbv_data.enrich \
+            data/processed/saps_crime.parquet \
+            data/processed/precincts.parquet \
+            data/processed/saps_crime_enriched.parquet
+      - name: Run geoengine-utils checks
+        run: |
+          shopt -s nullglob
+          spatial_files=(data/processed/precincts.parquet data/processed/saps_crime_enriched.parquet data/processed/municipal_wards.parquet data/processed/census_sal.parquet data/processed/osm_risk.parquet)
+          checked=0
+          for dataset in "${spatial_files[@]}"; do
+            if test -f "$dataset"; then
+              geoengine-utils validate "$dataset"
+              checked=$((checked + 1))
+            fi
+          done
+          test "$checked" -gt 0 || (echo "No spatial GeoParquet outputs found" && exit 1)
+      - name: Run geoengine-utils CI checks
+        run: |
+          cat > .geoengine-utils-ci.generated.json <<'JSON'
+          {
+            "fail_on_warnings": true,
+            "datasets": []
+          }
+          JSON
+          for dataset in data/processed/precincts.parquet data/processed/saps_crime_enriched.parquet data/processed/municipal_wards.parquet data/processed/census_sal.parquet data/processed/osm_risk.parquet; do
+            if test -f "$dataset"; then
+              python - "$dataset" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          config_path = Path(".geoengine-utils-ci.generated.json")
+          config = json.loads(config_path.read_text())
+          config["datasets"].append({"name": Path(sys.argv[1]).stem, "path": sys.argv[1]})
+          config_path.write_text(json.dumps(config))
+          PY
+            fi
+          done
+          geoengine-utils ci .geoengine-utils-ci.generated.json --json
+      - name: Upload all data artifacts to R2
+        run: python -m sa_gbv_data.publish_r2 --root data --bucket "$R2_BUCKET" --endpoint-url "$R2_ENDPOINT_URL"

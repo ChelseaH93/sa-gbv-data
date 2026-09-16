@@ -34,6 +34,21 @@ Outputs are kept under `data/` while they are small enough for GitHub. A reposit
 
 The enrichment command joins normalized station names from SAPS crime to precinct `STATION` values, keeps unmatched stations in a `.unmatched.csv` report, and produces a map-ready crime GeoParquet plus PMTiles layer.
 
+## Automated refresh and R2 publishing
+
+The [data pipeline workflow](.github/workflows/data-pipeline.yml) runs unit tests and source checks on pushes and pull requests. It polls the SAPS export daily at 04:17 UTC, can be started manually, reruns the configured ingestion/enrichment steps, validates every generated GeoParquet file with `geoengine-utils`, and overwrites the `latest/` objects in R2.
+
+Configure these GitHub repository variables and secrets:
+
+- Repository variable `SAPS_CRIME_URL`: current SAPS Excel export URL
+- Repository variable `SAPS_PRECINCT_URL`: optional precinct boundary ZIP URL
+- Secret `R2_ACCOUNT_ID`: Cloudflare account ID
+- Secret `R2_BUCKET`: R2 bucket name
+- Secret `R2_ACCESS_KEY_ID`: R2 API token access key
+- Secret `R2_SECRET_ACCESS_KEY`: R2 API token secret key
+
+R2 publishing is implemented in `src/sa_gbv_data/publish_r2.py`. Uploads use stable keys under `latest/`, so a successful refresh replaces the previous dataset versions.
+
 ## Data contracts and tests
 
 Normalized schemas are defined in `src/sa_gbv_data/contracts.py`. Each contract checks required fields, nullability, scalar types, geometry validity, and SAL code uniqueness before an output is written. Run the regression suite with:
