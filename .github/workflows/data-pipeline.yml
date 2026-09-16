@@ -47,8 +47,8 @@ jobs:
     needs: tests
     runs-on: ubuntu-latest
     env:
-      SAPS_CRIME_URL: ${{ inputs.crime_url || vars.SAPS_CRIME_URL }}
-      SAPS_PRECINCT_URL: ${{ inputs.precinct_url || vars.SAPS_PRECINCT_URL }}
+      SAPS_CRIME_URL: ${{ inputs.crime_url || vars.SAPS_CRIME_URL || secrets.SAPS_CRIME_URL }}
+      SAPS_PRECINCT_URL: ${{ inputs.precinct_url || vars.SAPS_PRECINCT_URL || secrets.SAPS_PRECINCT_URL }}
       R2_BUCKET: ${{ secrets.R2_BUCKET }}
       R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
       R2_ENDPOINT_URL: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
