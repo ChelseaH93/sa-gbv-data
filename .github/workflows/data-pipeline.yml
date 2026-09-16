@@ -49,6 +49,12 @@ jobs:
     env:
       SAPS_CRIME_URL: ${{ inputs.crime_url || vars.SAPS_CRIME_URL || secrets.SAPS_CRIME_URL }}
       SAPS_PRECINCT_URL: ${{ inputs.precinct_url || vars.SAPS_PRECINCT_URL || secrets.SAPS_PRECINCT_URL }}
+      MDB_BOUNDARIES_URL: ${{ vars.MDB_BOUNDARIES_URL || secrets.MDB_BOUNDARIES_URL }}
+      CENSUS_SAL_URL: ${{ vars.CENSUS_SAL_URL || secrets.CENSUS_SAL_URL }}
+      OSM_SOUTH: ${{ vars.OSM_SOUTH || secrets.OSM_SOUTH }}
+      OSM_WEST: ${{ vars.OSM_WEST || secrets.OSM_WEST }}
+      OSM_NORTH: ${{ vars.OSM_NORTH || secrets.OSM_NORTH }}
+      OSM_EAST: ${{ vars.OSM_EAST || secrets.OSM_EAST }}
       R2_BUCKET: ${{ secrets.R2_BUCKET }}
       R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
       R2_ENDPOINT_URL: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
@@ -86,6 +92,40 @@ jobs:
             data/processed/saps_crime.parquet \
             data/processed/precincts.parquet \
             data/processed/saps_crime_enriched.parquet
+      - name: Ingest municipal and ward boundaries
+        if: env.MDB_BOUNDARIES_URL != ''
+        run: |
+          curl --fail --location --retry 3 "$MDB_BOUNDARIES_URL" --output data/raw/municipal_wards.download
+          case "$MDB_BOUNDARIES_URL" in
+            *.zip|*.ZIP)
+              mkdir -p data/raw/municipal_wards
+              unzip -o data/raw/municipal_wards.download -d data/raw/municipal_wards
+              source_path=$(find data/raw/municipal_wards -type f \( -name '*.shp' -o -name '*.geojson' -o -name '*.json' \) | head -n 1)
+              ;;
+            *) source_path=data/raw/municipal_wards.download ;;
+          esac
+          test -n "$source_path" && test -f "$source_path" || (echo "No MDB vector source found" && exit 1)
+          python -m sa_gbv_data.ingest.municipal_wards "$source_path" data/processed/municipal_wards.parquet
+      - name: Ingest Census SAL
+        if: env.CENSUS_SAL_URL != ''
+        run: |
+          curl --fail --location --retry 3 "$CENSUS_SAL_URL" --output data/raw/census_sal.download
+          case "$CENSUS_SAL_URL" in
+            *.zip|*.ZIP)
+              mkdir -p data/raw/census_sal
+              unzip -o data/raw/census_sal.download -d data/raw/census_sal
+              source_path=$(find data/raw/census_sal -type f \( -name '*.shp' -o -name '*.parquet' \) | head -n 1)
+              ;;
+            *) source_path=data/raw/census_sal.download ;;
+          esac
+          test -n "$source_path" && test -f "$source_path" || (echo "No Census SAL source found" && exit 1)
+          python -m sa_gbv_data.ingest.census_sal "$source_path" data/processed/census_sal.parquet
+      - name: Ingest OSM infrastructure risk
+        if: env.OSM_SOUTH != '' && env.OSM_WEST != '' && env.OSM_NORTH != '' && env.OSM_EAST != ''
+        run: |
+          python -m sa_gbv_data.ingest.osm_risk \
+            "$OSM_SOUTH" "$OSM_WEST" "$OSM_NORTH" "$OSM_EAST" \
+            data/processed/osm_risk.parquet
       - name: Run geoengine-utils checks
         run: |
           shopt -s nullglob

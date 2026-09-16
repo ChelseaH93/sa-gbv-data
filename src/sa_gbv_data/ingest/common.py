@@ -7,6 +7,7 @@ import geopandas as gpd
 import requests
 
 MAX_GITHUB_FILE_BYTES = 90_000_000
+TARGET_CRS = "EPSG:9221"
 
 
 class RepositorySizeError(ValueError):
@@ -34,6 +35,9 @@ def extract_zip(archive: Path, destination: Path) -> Path:
 
 def write_geodataframe(frame: gpd.GeoDataFrame, destination: Path) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
+    if frame.crs is None:
+        raise ValueError(f"GeoDataFrame must have a CRS before writing {destination}")
+    frame = frame.to_crs(TARGET_CRS)
     frame.to_parquet(destination, index=False)
     enforce_repository_size(destination)
 

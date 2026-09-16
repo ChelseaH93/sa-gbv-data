@@ -42,12 +42,23 @@ Configure these GitHub repository variables and secrets:
 
 - Repository variable `SAPS_CRIME_URL`: current SAPS Excel export URL
 - Repository variable `SAPS_PRECINCT_URL`: optional precinct boundary ZIP URL
+- Repository variable `MDB_BOUNDARIES_URL`: optional MDB GeoJSON/Shapefile/ZIP URL
+- Repository variable `CENSUS_SAL_URL`: optional Census SAL Parquet/Shapefile/ZIP URL
+- Repository variables `OSM_SOUTH`, `OSM_WEST`, `OSM_NORTH`, `OSM_EAST`: optional Overpass bounding box
 - Secret `R2_ACCOUNT_ID`: Cloudflare account ID
 - Secret `R2_BUCKET`: R2 bucket name
 - Secret `R2_ACCESS_KEY_ID`: R2 API token access key
 - Secret `R2_SECRET_ACCESS_KEY`: R2 API token secret key
 
 R2 publishing is implemented in `src/sa_gbv_data/publish_r2.py`. Uploads use stable keys under `latest/`, so a successful refresh replaces the previous dataset versions.
+
+When all source URLs and OSM bounds are configured, the workflow publishes `saps_crime`, `precincts`, `municipal_wards`, `census_sal`, `osm_risk`, and `saps_crime_enriched` GeoParquet files. Spatial outputs also receive matching PMTiles files; raw tabular SAPS crime is intentionally Parquet-only.
+
+## Free web map
+
+The static map in `web/` is ready to deploy with the free Cloudflare Pages plan. Connect the repository in Cloudflare Pages, set the build output directory to `web`, and use no build command. Before deployment, edit `web/config.js` and set `R2_BASE_URL` to the public R2/custom-domain URL containing the `latest/processed` directory.
+
+GeoParquet outputs are written in `EPSG:9221` (Hartebeesthoek94 / ZAF BSU Albers 25E). PMTiles use the Web Mercator tiling convention required by browser vector-tile clients such as MapLibre; the authoritative GeoParquet remains in EPSG:9221.
 
 The current official SAPS first-quarter workbook is `https://www.saps.gov.za/services/downloads/2026/2026-2027_-_1st_Quarter_WEB.xlsm`.
 

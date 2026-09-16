@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="South African gender-based violence data map">
+    <title>SA GBV Data Map</title>
+    <link href="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+  </head>
+  <body>
+    <main class="map-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">SA GBV DATA</p>
+          <h1>Safety layers across South Africa</h1>
+        </div>
+        <div class="status" id="status">Connecting to data</div>
+      </header>
+      <div class="map-wrap">
+        <div id="map" aria-label="Interactive South African data map"></div>
+        <aside class="panel" aria-label="Map layers">
+          <h2>Layers</h2>
+          <label><input type="checkbox" data-layer="precincts" checked> SAPS precincts</label>
+          <label><input type="checkbox" data-layer="crime" checked> Enriched crime</label>
+          <label><input type="checkbox" data-layer="municipal" checked> Municipal and ward boundaries</label>
+          <label><input type="checkbox" data-layer="census" checked> Census SAL</label>
+          <label><input type="checkbox" data-layer="osm" checked> OSM risk factors</label>
+          <p class="note">GeoParquet: EPSG:9221<br>Tiles: browser Web Mercator</p>
+        </aside>
+      </div>
+    </main>
+    <script src="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/pmtiles@4.3.0/dist/pmtiles.js"></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

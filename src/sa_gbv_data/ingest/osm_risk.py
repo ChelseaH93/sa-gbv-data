@@ -8,7 +8,7 @@ import requests
 from shapely.geometry import Point
 
 from ..contracts import OSM_RISK_CONTRACT
-from .common import enforce_repository_size, validate_with_geoengine, write_pmtiles
+from .common import validate_with_geoengine, write_geodataframe, write_pmtiles
 
 DEFAULT_ENDPOINT = "https://overpass-api.de/api/interpreter"
 
@@ -38,9 +38,7 @@ def ingest(
     frame = gpd.GeoDataFrame(rows, geometry="geometry", crs="EPSG:4326")
     OSM_RISK_CONTRACT.validate(frame)
     validate_with_geoengine(frame, "osm_risk")
-    output.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_parquet(output, index=False)
-    enforce_repository_size(output)
+    write_geodataframe(frame, output)
     write_pmtiles(
         output,
         pmtiles_output or output.with_suffix(".pmtiles"),
