@@ -10,6 +10,7 @@ import pandas as pd
 from .contracts import SAPS_CRIME_CONTRACT, SAPS_PRECINCT_CONTRACT
 from .ingest.common import (
     TARGET_CRS,
+    normalize_polygon_geometry,
     validate_with_geoengine,
     write_geodataframe,
     write_pmtiles,
@@ -42,7 +43,7 @@ def join_crime_to_precincts(
         raise ValueError("simplify_tolerance_meters must be non-negative")
     # Keep the source precinct artifact authoritative; the enriched map layer
     # only needs a compact geometry because it repeats it per crime record.
-    precincts = precincts.to_crs(TARGET_CRS)
+    precincts = normalize_polygon_geometry(precincts).to_crs(TARGET_CRS)
     if simplify_tolerance_meters:
         precincts["geometry"] = precincts.geometry.simplify(
             simplify_tolerance_meters,
