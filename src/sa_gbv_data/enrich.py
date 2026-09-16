@@ -49,6 +49,7 @@ def join_crime_to_precincts(
             simplify_tolerance_meters,
             preserve_topology=True,
         )
+        precincts = normalize_polygon_geometry(precincts)
     crime["_station_key"] = crime["station_name"].map(normalize_station_name)
     precincts["_station_key"] = precincts["STATION"].map(normalize_station_name)
 

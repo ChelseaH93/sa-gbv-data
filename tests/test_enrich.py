@@ -1,7 +1,7 @@
 import geopandas as gpd
 import pandas as pd
 import pytest
-from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon, Polygon
 
 from sa_gbv_data import enrich
 
@@ -49,6 +49,7 @@ def test_join_crime_to_precincts_writes_enriched_outputs(tmp_path, monkeypatch):
     assert len(joined) == 1
     assert joined.loc[0, "count"] == 4
     assert joined.loc[0, "STATION"] == "Cape Town Central"
+    assert isinstance(joined.loc[0, "geometry"], MultiPolygon)
     assert pd.read_csv(unmatched)["station_name"].tolist() == ["Unknown"]
     assert output.exists()
 
