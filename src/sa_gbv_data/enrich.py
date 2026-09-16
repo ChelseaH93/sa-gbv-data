@@ -9,6 +9,7 @@ import pandas as pd
 
 from .contracts import SAPS_CRIME_CONTRACT, SAPS_PRECINCT_CONTRACT
 from .ingest.common import (
+    TARGET_CRS,
     validate_with_geoengine,
     write_geodataframe,
     write_pmtiles,
@@ -27,6 +28,7 @@ def join_crime_to_precincts(
     *,
     pmtiles_output: Path | None = None,
     unmatched_output: Path | None = None,
+    simplify_tolerance_meters: float = 25.0,
 ) -> gpd.GeoDataFrame:
     """Publish crime records with matching precinct geometry."""
     crime = pd.read_parquet(crime_source)
@@ -36,6 +38,16 @@ def join_crime_to_precincts(
 
     crime = crime.copy()
     precincts = precincts.copy()
+    if simplify_tolerance_meters < 0:
+        raise ValueError("simplify_tolerance_meters must be non-negative")
+    # Keep the source precinct artifact authoritative; the enriched map layer
+    # only needs a compact geometry because it repeats it per crime record.
+    precincts = precincts.to_crs(TARGET_CRS)
+    if simplify_tolerance_meters:
+        precincts["geometry"] = precincts.geometry.simplify(
+            simplify_tolerance_meters,
+            preserve_topology=True,
+        )
     crime["_station_key"] = crime["station_name"].map(normalize_station_name)
     precincts["_station_key"] = precincts["STATION"].map(normalize_station_name)
 
@@ -78,6 +90,7 @@ def main() -> None:
     parser.add_argument("output", type=Path, help="Enriched GeoParquet output")
     parser.add_argument("--pmtiles-output", type=Path)
     parser.add_argument("--unmatched-output", type=Path)
+    parser.add_argument("--simplify-tolerance-meters", type=float, default=25.0)
     args = parser.parse_args()
     join_crime_to_precincts(
         args.crime,
@@ -85,6 +98,7 @@ def main() -> None:
         args.output,
         pmtiles_output=args.pmtiles_output,
         unmatched_output=args.unmatched_output,
+        simplify_tolerance_meters=args.simplify_tolerance_meters,
     )
 
 
