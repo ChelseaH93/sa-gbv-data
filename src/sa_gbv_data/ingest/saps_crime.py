@@ -10,7 +10,7 @@ from ..contracts import SAPS_CRIME_CONTRACT
 
 def ingest(source: Path, output: Path) -> pd.DataFrame:
     """Read a SAPS export, normalize its column names, and write Parquet."""
-    if source.suffix.lower() in {".xlsx", ".xls"}:
+    if source.suffix.lower() in {".xlsx", ".xls", ".xlsm"}:
         frame = pd.read_excel(source)
     elif source.suffix.lower() == ".pdf":
         try:
