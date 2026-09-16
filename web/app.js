@@ -1,5 +1,8 @@
 const config = window.SA_GBV_CONFIG || {};
-const baseUrl = (config.R2_BASE_URL || "").replace(/\/$/, "");
+const configuredBaseUrl = (config.R2_BASE_URL || "").replace(/\/$/, "");
+const baseUrl = window.location.hostname.endsWith("workers.dev")
+  ? `${window.location.origin}/data/latest/processed`
+  : configuredBaseUrl;
 const status = document.getElementById("status");
 
 const layers = {
