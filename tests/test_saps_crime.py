@@ -15,7 +15,7 @@ def test_saps_crime_ingest_writes_contract_compliant_parquet(tmp_path, monkeypat
             "Financial Year": ["2024/25"], "Quarter": ["Q1"],
         }
     )
-    monkeypatch.setattr(saps_crime.pd, "read_excel", lambda _: source_frame)
+    monkeypatch.setattr(saps_crime.pd, "read_excel", lambda _, **__: source_frame)
 
     first = saps_crime.ingest(source, output)
     first_bytes = output.read_bytes()
