@@ -61,7 +61,9 @@ The Census 2022 sample bundle is a separate, infrequent microdata product. Uploa
 
 ## Free web map
 
-The static map is deployed as a Cloudflare Worker using `wrangler.toml`. The Worker serves `web/` and generates `config.js` at runtime from the Worker environment variable `R2_BASE_URL`. Set that variable to the public R2/custom-domain URL containing the `latest/processed` directory. Do not use the private S3 endpoint in browser configuration; no R2 credentials are exposed to the browser.
+The static map is deployed as a Cloudflare Worker using `wrangler.toml`. The Worker serves `web/`, generates `config.js` at runtime, and proxies PMTiles through `/data/latest/processed` so range requests work without public R2 CORS configuration. Set the Worker environment variable `R2_BASE_URL` to the public R2/custom-domain URL containing the `latest/processed` directory. Do not use the private S3 endpoint in browser configuration; no R2 credentials are exposed to the browser.
+
+If using a Cloudflare Pages project instead, choose the repository root (`/`) as the project root, use `python web/build.py` as the build command, and use `web` as the output directory. If the Pages project root is already set to `web`, use `python build.py` as the build command and `.` as the output directory; `python web/build.py` will incorrectly resolve to `/repo/web/web/build.py`.
 
 GeoParquet outputs are written in `EPSG:9221` (Hartebeesthoek94 / ZAF BSU Albers 25E). Polygon layers are normalized to `MultiPolygon` before validation. PMTiles are generated in Web Mercator (`EPSG:3857`) through `geoengine-utils`, as required by the PMTiles/MapLibre vector-tile convention; the authoritative GeoParquet remains in EPSG:9221.
 
