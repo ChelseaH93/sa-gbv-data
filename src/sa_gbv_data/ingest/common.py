@@ -1,5 +1,6 @@
 """Shared download and output helpers for ingestion commands."""
 
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from zipfile import ZipFile
@@ -93,6 +94,8 @@ def write_pmtiles(
 
 def enforce_repository_size(path: Path) -> None:
     """Keep checked-in artifacts below GitHub's 100 MB file limit."""
+    if os.environ.get("SA_GBV_ALLOW_LARGE_OUTPUTS") == "1":
+        return
     size = path.stat().st_size
     if size > MAX_GITHUB_FILE_BYTES:
         raise RepositorySizeError(

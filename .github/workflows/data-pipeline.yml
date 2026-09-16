@@ -67,6 +67,7 @@ jobs:
       R2_ENDPOINT_URL: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
       AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      SA_GBV_ALLOW_LARGE_OUTPUTS: "1"
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
