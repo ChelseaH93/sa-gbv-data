@@ -71,6 +71,8 @@ The official Thuthuzela Care Centre source is the [gov.za TCC map](https://www.g
 
 GTFS feeds are consolidated into `mobility_stops.parquet`/`.pmtiles` and `mobility_shapes.parquet`/`.pmtiles`. The source feeds are parsed from `stops.txt` and `shapes.txt`; authoritative GeoParquet uses EPSG:9221 and browser tiles use Web Mercator.
 
+OSM risk ingestion tries multiple public Overpass endpoints. If all are unavailable, the scheduled workflow logs a warning and continues publishing the other datasets.
+
 The manually downloaded SAPS boundary archive is stored at `data/raw/saps_station_boundaries_points.zip`. It contains both station points and polygon boundaries; the workflow uses the polygon boundaries for crime enrichment when `SAPS_PRECINCT_URL` is not configured.
 
 ## Data contracts and tests

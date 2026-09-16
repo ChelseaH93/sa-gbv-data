@@ -11,6 +11,11 @@ from ..contracts import OSM_RISK_CONTRACT
 from .common import validate_with_geoengine, write_geodataframe, write_pmtiles
 
 DEFAULT_ENDPOINT = "https://overpass-api.de/api/interpreter"
+FALLBACK_ENDPOINTS = (
+    DEFAULT_ENDPOINT,
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.private.coffee/api/interpreter",
+)
 
 
 def build_query(south: float, west: float, north: float, east: float) -> str:
@@ -27,8 +32,18 @@ def ingest(
     endpoint: str = DEFAULT_ENDPOINT,
     pmtiles_output: Path | None = None,
 ) -> gpd.GeoDataFrame:
-    response = requests.post(endpoint, data=build_query(south, west, north, east), timeout=180)
-    response.raise_for_status()
+    response = None
+    errors = []
+    endpoints = (endpoint,) if endpoint != DEFAULT_ENDPOINT else FALLBACK_ENDPOINTS
+    for candidate in endpoints:
+        try:
+            response = requests.post(candidate, data=build_query(south, west, north, east), timeout=180)
+            response.raise_for_status()
+            break
+        except requests.RequestException as error:
+            errors.append(f"{candidate}: {error}")
+    if response is None:
+        raise requests.ConnectionError("All Overpass endpoints failed: " + "; ".join(errors))
     rows = []
     for element in response.json().get("elements", []):
         location = element.get("center", element)

@@ -143,9 +143,11 @@ jobs:
       - name: Ingest OSM infrastructure risk
         if: env.OSM_SOUTH != '' && env.OSM_WEST != '' && env.OSM_NORTH != '' && env.OSM_EAST != ''
         run: |
-          python -m sa_gbv_data.ingest.osm_risk \
-            "$OSM_SOUTH" "$OSM_WEST" "$OSM_NORTH" "$OSM_EAST" \
-            data/processed/osm_risk.parquet
+          if ! python -m sa_gbv_data.ingest.osm_risk \
+              "$OSM_SOUTH" "$OSM_WEST" "$OSM_NORTH" "$OSM_EAST" \
+              data/processed/osm_risk.parquet; then
+            echo "Warning: Overpass endpoints unavailable; continuing without OSM risk output."
+          fi
       - name: Ingest Thuthuzela Care Centres
         if: env.TCC_KML_URL != ''
         run: python -m sa_gbv_data.ingest.tcc_centres data/processed/tcc_centres.parquet --url "$TCC_KML_URL"
