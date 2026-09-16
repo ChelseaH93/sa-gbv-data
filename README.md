@@ -61,7 +61,7 @@ The Census 2022 sample bundle is a separate, infrequent microdata product. Uploa
 
 ## Free web map
 
-The static map in `web/` is ready to deploy with the free Cloudflare Pages plan. Connect the repository in Cloudflare Pages, set the build command to `python web/build.py`, set the build output directory to `web`, and configure the Pages environment variable `R2_BASE_URL` to the public R2/custom-domain URL containing the `latest/processed` directory. The build generates `web/config.js` automatically; no R2 credentials are exposed to the browser.
+The static map in `web/` is ready to deploy with the free Cloudflare Pages plan. Connect the repository in Cloudflare Pages, set the build command to `python web/build.py`, set the build output directory to `web`, and configure the Pages environment variable `R2_BASE_URL` to the public R2/custom-domain URL containing the `latest/processed` directory. A Git push can trigger a redeploy without running this build command, so verify the deployment logs contain `Generated web/config.js from R2_BASE_URL`; otherwise the checked-in empty configuration will correctly show no data. The build generates `web/config.js` automatically; no R2 credentials are exposed to the browser.
 
 GeoParquet outputs are written in `EPSG:9221` (Hartebeesthoek94 / ZAF BSU Albers 25E). Polygon layers are normalized to `MultiPolygon` before validation. PMTiles are generated in Web Mercator (`EPSG:3857`) through `geoengine-utils`, as required by the PMTiles/MapLibre vector-tile convention; the authoritative GeoParquet remains in EPSG:9221.
 

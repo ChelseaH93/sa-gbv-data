@@ -50,6 +50,8 @@ const layerTypes = {
 if (!baseUrl || baseUrl.includes("YOUR-R2-PUBLIC-DOMAIN")) {
   status.textContent = "Set the R2 URL in config.js";
   status.classList.add("error");
+} else {
+  status.textContent = `Connecting to ${baseUrl}`;
 }
 
 const protocol = new pmtiles.Protocol();
@@ -82,6 +84,12 @@ map.on("error", (event) => {
   status.textContent = `Map error: ${message}`;
   status.classList.add("error");
   console.error("SA GBV map error", event.error || event);
+});
+
+map.on("data", (event) => {
+  if (event.dataType === "source" && event.isSourceLoaded === false && event.sourceId?.startsWith("source-")) {
+    console.debug("Loading map source", event.sourceId);
+  }
 });
 
 map.on("load", () => {
