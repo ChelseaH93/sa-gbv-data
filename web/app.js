@@ -52,8 +52,15 @@ const map = new maplibregl.Map({
   container: "map",
   style: {
     version: 8,
-    sources: {},
-    layers: [{ "id": "background", "type": "background", "paint": { "background-color": "#dbe7e4" } }]
+    sources: {
+      osm: {
+        type: "raster",
+        tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+        tileSize: 256,
+        attribution: "© OpenStreetMap contributors"
+      }
+    },
+    layers: [{ "id": "osm-basemap", "type": "raster", "source": "osm", "paint": { "raster-opacity": 0.82 } }]
   },
   center: [24.0, -29.0],
   zoom: 4.2,
