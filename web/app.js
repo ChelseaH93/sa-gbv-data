@@ -32,6 +32,11 @@ const layers = {
     file: "tcc_centres.pmtiles",
     sourceLayer: "tcc_centres",
     paint: { "circle-color": "#0891b2", "circle-radius": 6, "circle-stroke-color": "#ecfeff", "circle-stroke-width": 1.5 }
+  },
+  mobility: {
+    file: "mobility_shapes.pmtiles",
+    sourceLayer: "mobility_shapes",
+    paint: { "line-color": "#d97706", "line-width": 2, "line-opacity": 0.8 }
   }
 };
 

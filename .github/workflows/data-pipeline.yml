@@ -59,6 +59,7 @@ jobs:
       CENSUS_SAL_URL: ${{ vars.CENSUS_SAL_URL || secrets.CENSUS_SAL_URL }}
       CENSUS_SAMPLE_URL: ${{ inputs.census_sample_url || vars.CENSUS_SAMPLE_URL || secrets.CENSUS_SAMPLE_URL }}
       TCC_KML_URL: ${{ vars.TCC_KML_URL || secrets.TCC_KML_URL || 'https://www.google.com/maps/d/u/0/kml?mid=1J5vQRQD2NXR36hwuig8OhV8uO2B5JX0i&forcekml=1' }}
+      GTFS_URLS: ${{ vars.GTFS_URLS || secrets.GTFS_URLS }}
       OSM_SOUTH: ${{ vars.OSM_SOUTH || secrets.OSM_SOUTH }}
       OSM_WEST: ${{ vars.OSM_WEST || secrets.OSM_WEST }}
       OSM_NORTH: ${{ vars.OSM_NORTH || secrets.OSM_NORTH }}
@@ -148,10 +149,13 @@ jobs:
       - name: Ingest Thuthuzela Care Centres
         if: env.TCC_KML_URL != ''
         run: python -m sa_gbv_data.ingest.tcc_centres data/processed/tcc_centres.parquet --url "$TCC_KML_URL"
+      - name: Ingest GTFS mobility feeds
+        if: env.GTFS_URLS != ''
+        run: python -m sa_gbv_data.ingest.gtfs "$GTFS_URLS" data/processed/mobility_stops.parquet data/processed/mobility_shapes.parquet
       - name: Run geoengine-utils checks
         run: |
           shopt -s nullglob
-          spatial_files=(data/processed/precincts.parquet data/processed/saps_crime_enriched.parquet data/processed/municipal_wards.parquet data/processed/census_sal.parquet data/processed/osm_risk.parquet)
+          spatial_files=(data/processed/precincts.parquet data/processed/saps_crime_enriched.parquet data/processed/municipal_wards.parquet data/processed/census_sal.parquet data/processed/osm_risk.parquet data/processed/tcc_centres.parquet data/processed/mobility_stops.parquet data/processed/mobility_shapes.parquet)
           checked=0
           for dataset in "${spatial_files[@]}"; do
             if test -f "$dataset"; then
@@ -164,7 +168,7 @@ jobs:
           fi
       - name: Run geoengine-utils CI checks
         run: |
-          spatial_files=(data/processed/precincts.parquet data/processed/saps_crime_enriched.parquet data/processed/municipal_wards.parquet data/processed/census_sal.parquet data/processed/osm_risk.parquet)
+          spatial_files=(data/processed/precincts.parquet data/processed/saps_crime_enriched.parquet data/processed/municipal_wards.parquet data/processed/census_sal.parquet data/processed/osm_risk.parquet data/processed/tcc_centres.parquet data/processed/mobility_stops.parquet data/processed/mobility_shapes.parquet)
           checked=0
           for dataset in "${spatial_files[@]}"; do
             if test -f "$dataset"; then checked=$((checked + 1)); fi
@@ -179,7 +183,7 @@ jobs:
             "datasets": []
           }
           JSON
-          for dataset in data/processed/precincts.parquet data/processed/saps_crime_enriched.parquet data/processed/municipal_wards.parquet data/processed/census_sal.parquet data/processed/osm_risk.parquet; do
+          for dataset in data/processed/precincts.parquet data/processed/saps_crime_enriched.parquet data/processed/municipal_wards.parquet data/processed/census_sal.parquet data/processed/osm_risk.parquet data/processed/tcc_centres.parquet data/processed/mobility_stops.parquet data/processed/mobility_shapes.parquet; do
             if test -f "$dataset"; then
               python - "$dataset" <<'PY'
           import json
