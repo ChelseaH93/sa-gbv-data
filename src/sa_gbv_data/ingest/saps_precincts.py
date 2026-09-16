@@ -10,6 +10,7 @@ from ..contracts import SAPS_PRECINCT_CONTRACT
 from .common import (
     download,
     extract_zip,
+    normalize_polygon_geometry,
     validate_with_geoengine,
     write_geodataframe,
     write_pmtiles,
@@ -39,6 +40,7 @@ def ingest(source: str | Path, output: Path, workdir: Path, pmtiles_output: Path
         selected = selected[["COMPONENT", "STATION", "geometry"]]
     else:
         selected = frame[["COMPONENT", "STATION", "geometry"]]
+    selected = normalize_polygon_geometry(selected)
     SAPS_PRECINCT_CONTRACT.validate(selected)
     validate_with_geoengine(selected, "saps_precincts")
     write_geodataframe(selected, output)
