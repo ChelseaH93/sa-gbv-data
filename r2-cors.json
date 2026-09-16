@@ -1,0 +1,23 @@
+[
+  {
+    "AllowedOrigins": [
+      "https://sa-gbv-data.chelsharvey13.workers.dev"
+    ],
+    "AllowedMethods": [
+      "GET",
+      "HEAD"
+    ],
+    "AllowedHeaders": [
+      "Range",
+      "Content-Type"
+    ],
+    "ExposeHeaders": [
+      "Accept-Ranges",
+      "Content-Length",
+      "Content-Range",
+      "Content-Type",
+      "ETag"
+    ],
+    "MaxAgeSeconds": 3600
+  }
+]
