@@ -9,6 +9,7 @@ description = "Ingestion tools for South African crime, boundary, census, and in
 requires-python = ">=3.10"
 dependencies = [
     "geopandas>=0.14",
+    "geoengine-utils[cloud] @ git+https://github.com/ChelseaH93/geoengine-utils.git@dcdfabbc16ab7e8287c6aecee29a6bec3ff68b3f",
     "pandas>=2.0",
     "pyarrow>=14.0",
     "pyogrio>=0.7",

@@ -6,6 +6,12 @@ from zipfile import ZipFile
 import geopandas as gpd
 import requests
 
+MAX_GITHUB_FILE_BYTES = 90_000_000
+
+
+class RepositorySizeError(ValueError):
+    """Raised when an output is too large for a normal GitHub repository."""
+
 
 def download(url: str, destination: Path) -> Path:
     """Download a URL to disk, creating parent directories as needed."""
@@ -29,3 +35,55 @@ def extract_zip(archive: Path, destination: Path) -> Path:
 def write_geodataframe(frame: gpd.GeoDataFrame, destination: Path) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     frame.to_parquet(destination, index=False)
+    enforce_repository_size(destination)
+
+
+def validate_with_geoengine(frame: gpd.GeoDataFrame, dataset_name: str) -> None:
+    """Run geoengine-utils readiness checks before publishing spatial data."""
+    try:
+        from geoengine_utils import assess_readiness
+    except ImportError as error:
+        raise ImportError(
+            "Install geoengine-utils cloud dependencies with `pip install -e .`"
+        ) from error
+
+    report = assess_readiness(frame)
+    if not report.passed:
+        raise ValueError(f"{dataset_name} readiness check failed:\n{report.format_report()}")
+
+
+def write_pmtiles(
+    parquet: Path,
+    destination: Path,
+    *,
+    layer_name: str,
+    min_zoom: int = 0,
+    max_zoom: int = 8,
+) -> None:
+    """Convert a validated GeoParquet file to PMTiles."""
+    try:
+        from geoengine_utils.cloud import convert_vector_to_pmtiles
+    except ImportError as error:
+        raise ImportError(
+            "Install PMTiles support with `pip install -e .`"
+        ) from error
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    convert_vector_to_pmtiles(
+        parquet,
+        destination,
+        layer_name=layer_name,
+        min_zoom=min_zoom,
+        max_zoom=max_zoom,
+    )
+    enforce_repository_size(destination)
+
+
+def enforce_repository_size(path: Path) -> None:
+    """Keep checked-in artifacts below GitHub's 100 MB file limit."""
+    size = path.stat().st_size
+    if size > MAX_GITHUB_FILE_BYTES:
+        raise RepositorySizeError(
+            f"{path} is {size:,} bytes; move it to R2 before committing "
+            f"(repository guard: {MAX_GITHUB_FILE_BYTES:,} bytes)."
+        )

@@ -27,7 +27,9 @@ python -m sa_gbv_data.ingest.census_sal data/raw/sal.shp data/processed/sal.parq
 python -m sa_gbv_data.ingest.osm_risk -35.0 18.0 -33.5 19.0 data/processed/osm_risk.parquet
 ```
 
-The commands validate the required source fields and write columnar Parquet outputs. Replace the example SAPS and MDB URLs/paths with the current official downloads when running them.
+The commands validate the required source fields, run `geoengine-utils` spatial readiness checks, and write columnar Parquet outputs. Spatial commands also write a PMTiles archive beside the Parquet file by default; use `--pmtiles-output` to choose another path. SAPS crime is tabular and remains GeoParquet-only until it is joined to a spatial dataset. Replace the example SAPS and MDB URLs/paths with the current official downloads when running them.
+
+Outputs are kept under `data/` while they are small enough for GitHub. A repository-size guard stops artifacts at 90 MB, leaving room below GitHub's hard per-file limit; move larger outputs to R2 when that happens.
 
 ## Data contracts and tests
 
