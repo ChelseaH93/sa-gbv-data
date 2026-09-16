@@ -40,6 +40,8 @@ jobs:
           cache: pip
       - name: Install project
         run: python -m pip install -e ".[dev]"
+      - name: Verify geoengine-utils
+        run: python -c "import geoengine_utils; from geoengine_utils import assess_readiness; from geoengine_utils.cloud import convert_vector_to_pmtiles; print(geoengine_utils.__version__)"
       - name: Run unit tests
         run: python -m pytest -q
       - name: Compile source
@@ -73,6 +75,8 @@ jobs:
           cache: pip
       - name: Install project
         run: python -m pip install -e ".[dev]"
+      - name: Verify geoengine-utils
+        run: python -c "import geoengine_utils; from geoengine_utils import assess_readiness; from geoengine_utils.cloud import convert_vector_to_pmtiles; print(geoengine_utils.__version__)"
       - name: Download SAPS crime export
         run: |
           test -n "$SAPS_CRIME_URL" || (echo "Set the SAPS_CRIME_URL repository variable" && exit 1)

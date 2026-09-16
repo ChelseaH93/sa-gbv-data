@@ -48,7 +48,8 @@ def validate_with_geoengine(frame: gpd.GeoDataFrame, dataset_name: str) -> None:
         from geoengine_utils import assess_readiness
     except ImportError as error:
         raise ImportError(
-            "Install geoengine-utils cloud dependencies with `pip install -e .`"
+            "geoengine-utils readiness import failed; install the project dependencies "
+            f"(missing dependency: {error.name or error})"
         ) from error
 
     report = assess_readiness(frame)
