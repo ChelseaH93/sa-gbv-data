@@ -15,8 +15,14 @@ def test_upload_tree_replaces_stable_latest_keys(monkeypatch, tmp_path):
             uploads.append((filename, bucket, key, ExtraArgs))
 
     fake_boto3 = types.ModuleType("boto3")
-    fake_boto3.client = lambda service, endpoint_url: FakeClient()
+    fake_boto3.client = lambda service, **kwargs: FakeClient()
+    fake_botocore_config = types.ModuleType("botocore.config")
+    fake_botocore_config.Config = lambda **kwargs: kwargs
+    fake_botocore = types.ModuleType("botocore")
+    fake_botocore.config = fake_botocore_config
     monkeypatch.setitem(sys.modules, "boto3", fake_boto3)
+    monkeypatch.setitem(sys.modules, "botocore", fake_botocore)
+    monkeypatch.setitem(sys.modules, "botocore.config", fake_botocore_config)
 
     assert publish_r2.upload_tree(
         tmp_path,
@@ -41,8 +47,14 @@ def test_upload_tree_skips_repository_placeholders(monkeypatch, tmp_path):
             uploads.append(key)
 
     fake_boto3 = types.ModuleType("boto3")
-    fake_boto3.client = lambda service, endpoint_url: FakeClient()
+    fake_boto3.client = lambda service, **kwargs: FakeClient()
+    fake_botocore_config = types.ModuleType("botocore.config")
+    fake_botocore_config.Config = lambda **kwargs: kwargs
+    fake_botocore = types.ModuleType("botocore")
+    fake_botocore.config = fake_botocore_config
     monkeypatch.setitem(sys.modules, "boto3", fake_boto3)
+    monkeypatch.setitem(sys.modules, "botocore", fake_botocore)
+    monkeypatch.setitem(sys.modules, "botocore.config", fake_botocore_config)
 
     publish_r2.upload_tree(tmp_path, bucket="bucket", endpoint_url="https://r2.example")
     assert uploads == ["latest/layer.parquet"]

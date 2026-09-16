@@ -24,10 +24,19 @@ def upload_tree(
     """Upload every file below ``root``, replacing the same R2 key."""
     try:
         import boto3
+        from botocore.config import Config
     except ImportError as error:
         raise ImportError("Install R2 publishing support with `pip install -e .`") from error
 
-    client = boto3.client("s3", endpoint_url=endpoint_url)
+    client = boto3.client(
+        "s3",
+        endpoint_url=endpoint_url,
+        region_name="auto",
+        config=Config(
+            signature_version="s3v4",
+            s3={"addressing_style": "path"},
+        ),
+    )
     uploaded = 0
     for path in sorted(
         path
