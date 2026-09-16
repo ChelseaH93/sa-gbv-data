@@ -25,6 +25,23 @@ def test_validate_with_geoengine_rejects_failed_readiness(monkeypatch):
         common.validate_with_geoengine(frame, "sample")
 
 
+def test_validate_with_geoengine_rejects_warnings(monkeypatch):
+    class WarningReport:
+        passed = True
+        warnings = ["mixed geometry types"]
+
+        def format_report(self):
+            return "mixed geometry types"
+
+    fake_geoengine = types.ModuleType("geoengine_utils")
+    fake_geoengine.assess_readiness = lambda _: WarningReport()
+    monkeypatch.setitem(sys.modules, "geoengine_utils", fake_geoengine)
+
+    frame = gpd.GeoDataFrame({"geometry": [Point(18.4, -33.9)]}, crs="EPSG:4326")
+    with pytest.raises(ValueError, match="mixed geometry types"):
+        common.validate_with_geoengine(frame, "sample")
+
+
 def test_write_pmtiles_delegates_with_expected_options(monkeypatch, tmp_path):
     calls = {}
 

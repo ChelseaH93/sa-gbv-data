@@ -36,7 +36,6 @@ def test_join_crime_to_precincts_writes_enriched_outputs(tmp_path, monkeypatch):
         crs="EPSG:4326",
     ).to_parquet(precinct_path, index=False)
 
-    monkeypatch.setattr(enrich, "validate_with_geoengine", lambda *_: None)
     monkeypatch.setattr(enrich, "write_pmtiles", lambda *_args, **_kwargs: None)
 
     joined = enrich.join_crime_to_precincts(
@@ -52,6 +51,9 @@ def test_join_crime_to_precincts_writes_enriched_outputs(tmp_path, monkeypatch):
     assert isinstance(joined.loc[0, "geometry"], MultiPolygon)
     assert pd.read_csv(unmatched)["station_name"].tolist() == ["Unknown"]
     assert output.exists()
+    persisted = gpd.read_parquet(output)
+    enrich.validate_with_geoengine(persisted, "saps_crime_enriched")
+    assert persisted.geometry.geom_type.unique().tolist() == ["MultiPolygon"]
 
 
 def test_join_crime_to_precincts_fails_when_nothing_matches(tmp_path, monkeypatch):

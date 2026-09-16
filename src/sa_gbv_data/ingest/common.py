@@ -67,7 +67,7 @@ def validate_with_geoengine(frame: gpd.GeoDataFrame, dataset_name: str) -> None:
         ) from error
 
     report = assess_readiness(frame)
-    if not report.passed:
+    if not report.passed or report.warnings:
         raise ValueError(f"{dataset_name} readiness check failed:\n{report.format_report()}")
 
 

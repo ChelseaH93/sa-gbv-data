@@ -40,6 +40,13 @@ const layers = {
   }
 };
 
+const layerTypes = {
+  municipal: "line",
+  osm: "circle",
+  tcc: "circle",
+  mobility: "line"
+};
+
 if (!baseUrl || baseUrl.includes("YOUR-R2-PUBLIC-DOMAIN")) {
   status.textContent = "Set the R2 URL in config.js";
   status.classList.add("error");
@@ -70,18 +77,34 @@ const map = new maplibregl.Map({
 
 map.addControl(new maplibregl.NavigationControl(), "bottom-right");
 
+map.on("error", (event) => {
+  const message = event.error?.message || "A map layer failed to load";
+  status.textContent = `Map error: ${message}`;
+  status.classList.add("error");
+  console.error("SA GBV map error", event.error || event);
+});
+
 map.on("load", () => {
   if (!baseUrl || baseUrl.includes("YOUR-R2-PUBLIC-DOMAIN")) return;
   let loaded = 0;
+  const failed = [];
   Object.entries(layers).forEach(([key, layer]) => {
     const sourceId = `source-${key}`;
     const layerId = `layer-${key}`;
-    map.addSource(sourceId, { type: "vector", url: `pmtiles://${baseUrl}/${layer.file}` });
-    const type = key === "municipal" ? "line" : key === "osm" ? "circle" : "fill";
-    map.addLayer({ id: layerId, type, source: sourceId, "source-layer": layer.sourceLayer, paint: layer.paint });
-    loaded += 1;
+    try {
+      map.addSource(sourceId, { type: "vector", url: `pmtiles://${baseUrl}/${layer.file}` });
+      const type = layerTypes[key] || "fill";
+      map.addLayer({ id: layerId, type, source: sourceId, "source-layer": layer.sourceLayer, paint: layer.paint });
+      loaded += 1;
+    } catch (error) {
+      failed.push(key);
+      console.error(`Could not register ${key} layer`, error);
+    }
   });
-  status.textContent = `${loaded} layers available`;
+  status.textContent = failed.length
+    ? `${loaded} layers available; unavailable: ${failed.join(", ")}`
+    : `${loaded} layers available`;
+  status.classList.toggle("error", failed.length > 0);
 });
 
 document.querySelectorAll("input[data-layer]").forEach((input) => {
