@@ -84,6 +84,11 @@ map.addControl(new maplibregl.NavigationControl(), "bottom-right");
 
 map.on("error", (event) => {
   const message = event.error?.message || "A map layer failed to load";
+  if (message.includes("404") || message.includes("Bad response code: 404")) {
+    status.textContent = "Some optional layers are unavailable";
+    console.warn("Optional map layer unavailable", event.error || event);
+    return;
+  }
   status.textContent = `Map error: ${message}`;
   status.classList.add("error");
   console.error("SA GBV map error", event.error || event);
