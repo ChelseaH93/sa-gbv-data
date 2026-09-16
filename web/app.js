@@ -22,8 +22,8 @@ const layers = {
     paint: { "line-color": "#0f766e", "line-width": 1.3, "line-opacity": 0.75 }
   },
   census: {
-    file: "census_sal.pmtiles",
-    sourceLayer: "census_sal",
+    file: "municipal_wards.pmtiles",
+    sourceLayer: "municipal_wards",
     paint: { "fill-color": "#8b5cf6", "fill-opacity": 0.12, "fill-outline-color": "#a78bfa" }
   },
   osm: {

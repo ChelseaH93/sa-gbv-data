@@ -69,6 +69,8 @@ If using a Cloudflare Pages project instead, choose the repository root (`/`) as
 
 GeoParquet outputs are written in `EPSG:9221` (Hartebeesthoek94 / ZAF BSU Albers 25E). Polygon layers are normalized to `MultiPolygon` before validation. PMTiles are generated in Web Mercator (`EPSG:3857`) through `geoengine-utils`, as required by the PMTiles/MapLibre vector-tile convention; the authoritative GeoParquet remains in EPSG:9221.
 
+When Census SAL is unavailable, the web map uses municipal ward boundaries as a clearly labelled Census geography proxy. This provides spatial context only; it does not add Census population or household values to the ward polygons.
+
 The current official SAPS first-quarter workbook is `https://www.saps.gov.za/services/downloads/2026/2026-2027_-_1st_Quarter_WEB.xlsm`.
 
 The official Thuthuzela Care Centre source is the [gov.za TCC map](https://www.gov.za/TCC), whose public KML export is parsed into `tcc_centres.parquet` and `tcc_centres.pmtiles`.
