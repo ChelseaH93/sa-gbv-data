@@ -9,11 +9,11 @@ def test_current_saps_raw_workbook_layout_is_normalized(monkeypatch):
     summary = pd.DataFrame({"Description": ["summary"]})
     raw = pd.DataFrame(
         {
-            "Station": ["Acornhoek"],
-            "District": ["Ehlanzeni"],
-            "Province": ["Mpumalanga"],
-            "Crime_Category": ["Murder"],
-            "April 2026 to June 2026": [3],
+            "Station": ["Acornhoek", None, ""],
+            "District": ["Ehlanzeni", None, "Ehlanzeni"],
+            "Province": ["Mpumalanga", None, ""],
+            "Crime_Category": ["Murder", None, "Murder"],
+            "April 2026 to June 2026": [3, None, None],
         }
     )
 

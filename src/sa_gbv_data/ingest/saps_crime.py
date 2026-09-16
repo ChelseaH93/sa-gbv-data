@@ -25,6 +25,17 @@ def _read_saps_workbook(source: Path) -> pd.DataFrame:
     raw = pd.read_excel(source, sheet_name="RAW Data", header=2, usecols="E:H,AC")
     raw = raw.iloc[:, [0, 2, 3, 4]].copy()
     raw.columns = ["station_name", "province", "crime_category", "count"]
+    raw["count"] = pd.to_numeric(raw["count"], errors="coerce")
+    raw = raw.dropna(
+        subset=["station_name", "province", "crime_category", "count"]
+    ).copy()
+    for column in ["station_name", "province", "crime_category"]:
+        raw[column] = raw[column].astype(str).str.strip()
+    raw = raw[
+        (raw["station_name"] != "")
+        & (raw["province"] != "")
+        & (raw["crime_category"] != "")
+    ]
     year_match = re.search(r"(20\d{2})-(20\d{2})", source.stem)
     quarter_match = re.search(r"(\d)(?:st|nd|rd|th)[ _-]+quarter", source.stem, re.IGNORECASE)
     raw["financial_year"] = (
