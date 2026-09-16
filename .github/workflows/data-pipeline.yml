@@ -16,6 +16,10 @@ on:
         description: "SAPS precinct ZIP URL; defaults to the SAPS_PRECINCT_URL repository variable"
         required: false
         type: string
+      census_sample_url:
+        description: "R2/public URL for the Census 2022 sample ZIP"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -51,6 +55,7 @@ jobs:
       SAPS_PRECINCT_URL: ${{ inputs.precinct_url || vars.SAPS_PRECINCT_URL || secrets.SAPS_PRECINCT_URL }}
       MDB_BOUNDARIES_URL: ${{ vars.MDB_BOUNDARIES_URL || secrets.MDB_BOUNDARIES_URL }}
       CENSUS_SAL_URL: ${{ vars.CENSUS_SAL_URL || secrets.CENSUS_SAL_URL }}
+      CENSUS_SAMPLE_URL: ${{ inputs.census_sample_url || vars.CENSUS_SAMPLE_URL || secrets.CENSUS_SAMPLE_URL }}
       OSM_SOUTH: ${{ vars.OSM_SOUTH || secrets.OSM_SOUTH }}
       OSM_WEST: ${{ vars.OSM_WEST || secrets.OSM_WEST }}
       OSM_NORTH: ${{ vars.OSM_NORTH || secrets.OSM_NORTH }}
@@ -122,6 +127,11 @@ jobs:
           esac
           test -n "$source_path" && test -f "$source_path" || (echo "No Census SAL source found" && exit 1)
           python -m sa_gbv_data.ingest.census_sal "$source_path" data/processed/census_sal.parquet
+      - name: Ingest Census 2022 sample bundle
+        if: env.CENSUS_SAMPLE_URL != ''
+        run: |
+          curl --fail --location --retry 3 "$CENSUS_SAMPLE_URL" --output data/raw/census2022_sample.zip
+          python -m sa_gbv_data.ingest.census_microdata data/raw/census2022_sample.zip data/processed
       - name: Ingest OSM infrastructure risk
         if: env.OSM_SOUTH != '' && env.OSM_WEST != '' && env.OSM_NORTH != '' && env.OSM_EAST != ''
         run: |

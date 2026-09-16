@@ -44,6 +44,7 @@ Configure these GitHub repository variables and secrets:
 - Repository variable `SAPS_PRECINCT_URL`: optional precinct boundary ZIP URL
 - Repository variable `MDB_BOUNDARIES_URL`: optional MDB GeoJSON/Shapefile/ZIP URL
 - Repository variable `CENSUS_SAL_URL`: optional Census SAL Parquet/Shapefile/ZIP URL
+- Repository variable `CENSUS_SAMPLE_URL`: optional R2/public URL for the manually uploaded Census 2022 sample ZIP
 - Repository variables `OSM_SOUTH`, `OSM_WEST`, `OSM_NORTH`, `OSM_EAST`: optional Overpass bounding box
 - Secret `R2_ACCOUNT_ID`: Cloudflare account ID
 - Secret `R2_BUCKET`: R2 bucket name
@@ -53,6 +54,8 @@ Configure these GitHub repository variables and secrets:
 R2 publishing is implemented in `src/sa_gbv_data/publish_r2.py`. Uploads use stable keys under `latest/`, so a successful refresh replaces the previous dataset versions.
 
 When all source URLs and OSM bounds are configured, the workflow publishes `saps_crime`, `precincts`, `municipal_wards`, `census_sal`, `osm_risk`, and `saps_crime_enriched` GeoParquet files. Spatial outputs also receive matching PMTiles files; raw tabular SAPS crime is intentionally Parquet-only.
+
+The Census 2022 sample bundle is a separate, infrequent microdata product. Upload it manually to R2, configure `CENSUS_SAMPLE_URL`, and dispatch the workflow. It is split into `census2022_geography.parquet`, `census2022_households.parquet`, and `census2022_persons.parquet`; these are not Census SAL and do not produce PMTiles by themselves.
 
 ## Free web map
 
